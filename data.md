@@ -1,1 +1,9 @@
-
+"bug null"
+"documentation null"
+"duplicate null"
+"enhancement null"
+"good first issue null"
+"help wanted null"
+"invalid null"
+"question null"
+"wontfix null"
