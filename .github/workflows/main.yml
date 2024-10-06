@@ -3,7 +3,6 @@ name: Get Issue Labels Count
 on:
   schedule:    
     - cron: '*/15 * * * *'
-workflow_dispatch:
 
 jobs:
   get-labels-count:
