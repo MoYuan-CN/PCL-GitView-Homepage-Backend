@@ -1,0 +1,29 @@
+name: Get Issue Labels Count
+
+on:
+  schedule:    
+    - cron: '*/15 * * * *'
+
+jobs:
+  get-labels-count:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Get Labels and Issues Count
+      env:
+        GITHUB_TOKEN: ${{ secrets.SHEEP }}
+      run: |        
+        curl -H "Authorization: token $GITHUB_TOKEN" \
+          https://api.github.com/repos/${{ github.repository }}/labels \
+          | jq '.[] | "\(.name) \(.open_issues_count)"' > data.md
+
+    - name: Commit and Push Changes
+      run: |
+        git config --global user.name 'HelloWFB'
+        git config --global user.email '167983016+HelloWFB@users.noreply.github.com'
+        git add data.md
+        git commit -m "Update issue counts for labels"
+        git push
