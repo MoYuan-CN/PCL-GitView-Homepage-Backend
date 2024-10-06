@@ -16,7 +16,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.SHEEP }}
       run: |        
-        curl -H "Authorization: token $GITHUB_TOKEN" \
+        curl -H "Authorization: token ${{ secrets.SHEEP }}" \
           https://api.github.com/repos/${{ github.repository }}/labels \
           | jq '.[] | "\(.name) \(.open_issues_count)"' > data.md
 
