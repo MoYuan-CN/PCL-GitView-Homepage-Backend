@@ -14,9 +14,9 @@ jobs:
 
     - name: Get Labels and Issues Count
       env:
-        GITHUB_TOKEN: ${{ secrets.SHEEP }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |        
-        curl -H "Authorization: token ${{ secrets.SHEEP }}" \
+        curl -H "Authorization: token $GITHUB_TOKEN" \
           https://api.github.com/repos/${{ github.repository }}/labels \
           | jq '.[] | "\(.name) \(.open_issues_count)"' > data.md
 
