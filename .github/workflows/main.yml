@@ -26,14 +26,15 @@ jobs:
 
         # 对每个标签获取其 open issue 数量并追加到 data.md 文件中
         for label in $labels; do
-          # 对标签名称进行 URL 编码以处理特殊字符
-          encoded_label=$(echo $label | jq -sRr @uri)
+          # URL encode the label to handle special characters
+          encoded_label=$(echo "$label" | jq -sRr @uri)
 
           # 使用编码后的标签进行查询
           issue_count=$(curl -H "Authorization: token $GITHUB_TOKEN" \
             "https://api.github.com/search/issues?q=repo:Hex-Dragon/PCL2+label:$encoded_label+state:open" \
             | jq '.total_count')
 
+          # 将结果写入 data.md
           echo "$label $issue_count" >> data.md
         done
 
