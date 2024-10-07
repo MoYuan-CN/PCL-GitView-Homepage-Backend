@@ -1,8 +1,8 @@
 name: Get Issue Labels Count
 
 on:
-  schedule:    
-    - cron: '*/15 * * * *'
+  schedule:
+    - cron: '*/15 * * * *'  # 每 15 分钟执行一次
 
 jobs:
   get-labels-count:
@@ -15,15 +15,33 @@ jobs:
     - name: Get Labels and Issues Count
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |        
-        curl -H "Authorization: token $GITHUB_TOKEN" \
-          https://api.github.com/repos/${{ github.repository }}/labels \
-          | jq '.[] | "\(.name) \(.open_issues_count)"' > data.md
-
-    - name: Commit and Push Changes
       run: |
-        git config --global user.name 'github-actions[bot]'
-        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-        git add data.md
-        git commit -m "Update issue counts for labels"
-        git push
+        # 获取所有标签
+        labels=$(curl -H "Authorization: token $GITHUB_TOKEN" \
+          https://api.github.com/repos/${{ github.repository }}/labels \
+          | jq -r '.[].name')
+
+        # 清空或创建 data.md 文件
+        echo "" > data.md
+
+        # 对每个标签获取其 open issue 数量并追加到 data.md 文件中
+        for label in $labels; do
+          issue_count=$(curl -H "Authorization: token $GITHUB_TOKEN" \
+            "https://api.github.com/search/issues?q=repo:${{ github.repository }}+label:\"$label\"+state:open" \
+            | jq '.total_count')
+          
+          echo "$label $issue_count" >> data.md
+        done
+
+    - name: Commit and Push Changes if data.md is modified
+      run: |
+        # 检查 data.md 文件是否有变化
+        if [ -n "$(git status --porcelain data.md)" ]; then
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add data.md
+          git commit -m "Update issue counts for labels"
+          git push
+        else
+          echo "No changes in data.md, skipping commit and push."
+        fi
