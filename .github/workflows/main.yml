@@ -49,7 +49,7 @@ jobs:
                 const { data: issues } = await axios.get(issuesUrl, {
                   headers: { 
                     'Accept': 'application/vnd.github.v3+json',
-                    'Authorization': `Bearer ${process.env.SHEEP}`
+                    'Authorization': `Bearer ${process.env.GH_TOKEN}`
                   }
                 });
                 fs.writeFileSync(path + fileName, `${issues.total_count}`);
