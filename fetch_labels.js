@@ -16,7 +16,7 @@ const excludePatterns = /➦ (删除|解锁|锁定)/;
 
     for (const label of labels) {
       if (excludePatterns.test(label.name)) continue;
-      const sanitizedLabel = label.name.replace(/[🟩🟪🟨🚫<>"\\/:|?* ]/g, '_');
+      const sanitizedLabel = label.name.replace(/[🟩🟪🟥🟨🚫<>"\\/:|?* ]/g, '_');
       const fileName = `${sanitizedLabel}.md`;
       const issuesUrl = `https://api.github.com/search/issues?q=repo:${repo}+is:issue+label:"${encodeURIComponent(
         label.name
