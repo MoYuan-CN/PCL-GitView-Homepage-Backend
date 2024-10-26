@@ -1,74 +1,71 @@
-name: Update Issue Count
+name: Fetch Issue Counts by Label
 
 on:
   schedule:
-    - cron: "*/15 * * * *"  # 每 15 分钟运行一次
-  workflow_dispatch:  # 允许手动触发
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
 
 jobs:
-  update-issue-count:
+  fetch-labels:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout the repository
-      uses: actions/checkout@v3
+      - name: Checkout Repository
+        uses: actions/checkout@v2
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.x'
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
 
-    - name: Install requests library
-      run: pip install requests
+      - name: Install Axios
+        run: npm install axios
 
-    - name: Fetch labels and issues count
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 使用 GitHub Actions 自动生成的令牌
-      run: |
-        import os
-        import re
-        import requests
+      - name: Fetch Issues by Label
+        id: fetch_issues
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          const axios = require('axios');
+          const fs = require('fs');
+          const path = './';
+          const repo = 'Hex-Dragon/PCL2';
+          const url = `https://api.github.com/repos/${repo}/labels`;
+          const excludePatterns = /➦ (删除|解锁|锁定)/;
+          
+          (async function() {
+            try {
+              const { data: labels } = await axios.get(url, {
+                headers: { 
+                  'Accept': 'application/vnd.github.v3+json',
+                  'Authorization': `Bearer ${process.env.GH_TOKEN}`
+                }
+              });
 
-        # GitHub API 访问目标仓库
-        REPO_OWNER = "Hex-Dragon"
-        REPO_NAME = "PCL2"
-        API_URL = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/labels"
+              for (const label of labels) {
+                if (excludePatterns.test(label.name)) continue;
+                const fileName = `${label.name.replace(/[<>:"/\\|?*\s]/g, '_')}.md`;
+                const issuesUrl = `https://api.github.com/search/issues?q=repo:${repo}+is:issue+label:"${encodeURIComponent(label.name)}"`;
+                const { data: issues } = await axios.get(issuesUrl, {
+                  headers: { 
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Authorization': `Bearer ${process.env.GH_TOKEN}`
+                  }
+                });
+                fs.writeFileSync(path + fileName, `${issues.total_count}`);
+              }
+            } catch (error) {
+              console.error(`Error fetching labels or writing files: ${error.message}`);
+              process.exit(1);
+            }
+          })();
 
-        headers = {
-            "Authorization": f"Bearer {os.getenv('GITHUB_TOKEN')}",
-            "Accept": "application/vnd.github.v3+json"
-        }
-
-        # 获取所有标签
-        response = requests.get(API_URL, headers=headers)
-        if response.status_code != 200:
-            raise Exception(f"Failed to fetch labels: {response.status_code} {response.text}")
-
-        labels = response.json()
-
-        for label in labels:
-            label_name = label['name']
-            # 获取该标签下的issue数量
-            issues_url = f"https://api.github.com/search/issues?q=label:{label_name}+repo:{REPO_OWNER}/{REPO_NAME}+type:issue"
-            issues_response = requests.get(issues_url, headers=headers)
-            if issues_response.status_code != 200:
-                raise Exception(f"Failed to fetch issues for label {label_name}: {issues_response.status_code} {issues_response.text}")
-
-            issues_data = issues_response.json()
-            issue_count = issues_data['total_count']
-
-            # 处理标签名中的特殊字符
-            safe_label_name = re.sub(r'[\/:*?"<>| ]', '_', label_name)
-
-            # 保存到文件 [标签名].md
-            with open(f"{safe_label_name}.md", "w") as file:
-                file.write(str(issue_count) + '\n')
-
-    - name: Commit changes
-      run: |
-        git config --global user.name "github-actions[bot]"
-        git config --global user.email "github-actions[bot]@users.noreply.github.com"
-        git add .
-        git commit -m "Update issue count for labels"
-        git push
-      continue-on-error: true  # 如果没有文件更新，不要让工作流失败
+      - name: Commit and Push Changes
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Update issue counts for labels" || echo "No changes to commit"
+          git push
