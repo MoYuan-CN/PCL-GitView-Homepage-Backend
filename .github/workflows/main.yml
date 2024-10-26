@@ -44,7 +44,8 @@ jobs:
 
               for (const label of labels) {
                 if (excludePatterns.test(label.name)) continue;
-                const fileName = `${label.name.replace(/[<>:"/\\|?*\s]/g, '_')}.md`;
+                const sanitizedLabel = label.name.replace(/[🟩🟪🟨🚫<>"\\/:|?* ]/g, '_');
+                const fileName = `${sanitizedLabel}.md`;
                 const issuesUrl = `https://api.github.com/search/issues?q=repo:${repo}+is:issue+label:"${encodeURIComponent(label.name)}"`;
                 const { data: issues } = await axios.get(issuesUrl, {
                   headers: { 
