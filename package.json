@@ -1,0 +1,19 @@
+{
+    "name": "pcl-issuehomepage",
+    "version": "1.0.0",
+    "description": "",
+    "main": "app.ts",
+    "type": "module",
+    "scripts": {},
+    "keywords": [],
+    "author": "",
+    "license": "GPL-3.0-only",
+    "dependencies": {
+        "@octokit/core": "^6.1.2",
+        "tsc": "^2.0.4"
+    },
+    "devDependencies": {
+        "@types/node": "^22.8.1"
+    }
+}
+

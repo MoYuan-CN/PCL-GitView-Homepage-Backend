@@ -1,0 +1,41 @@
+name: Fetch Issue Counts by Label
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+jobs:
+  fetch-labels:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+
+      - name: Install PNPM
+        run: npm install -g pnpm
+
+      - name: Install Dependencies
+        run: pnpm i
+
+      - name: Build
+        run: tsc
+
+      - name: Run Fetch Labels Script
+        env:
+          ghpat: ${{ secrets.pat }}
+        run: node dist/app.js
+
+      - name: Commit and Push Changes
+        env:
+          ghpat: ${{ secrets.pat }}
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Update issue counts for labels" || echo "No changes to commit"
+          git push
