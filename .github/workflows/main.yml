@@ -24,7 +24,7 @@ jobs:
       - name: Fetch Issues by Label
         id: fetch_issues
         env:
-          GH_TOKEN: ${{ secrets.SHEEP }}
+          SHEEP: ${{ secrets.SHEEP }}
         run: |
           const axios = require('axios');
           const fs = require('fs');
@@ -38,7 +38,7 @@ jobs:
               const { data: labels } = await axios.get(url, {
                 headers: { 
                   'Accept': 'application/vnd.github.v3+json',
-                  'Authorization': `Bearer ${process.env.GH_TOKEN}`
+                  'Authorization': `Bearer ${process.env.SHEEP}`
                 }
               });
 
@@ -49,7 +49,7 @@ jobs:
                 const { data: issues } = await axios.get(issuesUrl, {
                   headers: { 
                     'Accept': 'application/vnd.github.v3+json',
-                    'Authorization': `Bearer ${process.env.GH_TOKEN}`
+                    'Authorization': `Bearer ${process.env.SHEEP}`
                   }
                 });
                 fs.writeFileSync(path + fileName, `${issues.total_count}`);
@@ -62,7 +62,7 @@ jobs:
 
       - name: Commit and Push Changes
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SHEEP: ${{ secrets.SHEEP }}
         run: |
           git config --local user.name "github-actions[bot]"
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
